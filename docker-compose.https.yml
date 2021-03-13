@@ -33,6 +33,7 @@ services:
 
   server:
     image: judge0/judge0:latest
+    env_file: .env
     environment:
       - VIRTUAL_HOST=${VIRTUAL_HOST}
       - LETSENCRYPT_HOST=${VIRTUAL_HOST}
