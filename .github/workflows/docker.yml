@@ -42,7 +42,7 @@ jobs:
           SECRET_KEY_BASE=$SECRET_KEY_BASE" > .env
       - name: Replace env variables on judge0.conf
         run: |
-          sed -i -e 's/${AUTHZ_TOKEN}/$TEST_KEY/g' judge0.conf
+          sed -i -e 's/${AUTHZ_TOKEN}/${TEST_KEY}/g' judge0.conf
           cat judge0.conf
         
         
