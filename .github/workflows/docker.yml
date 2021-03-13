@@ -4,6 +4,21 @@ name: CI to Docker Hub
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
+env:
+  DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+  DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+  VIRTUAL_HOST: ${{ secrets.VIRTUAL_HOST }}
+  LETSENCRYPT_EMAIL: ${{ secrets.LETSENCRYPT_EMAIL }}
+  AUTHN_TOKEN: ${{ secrets.AUTHN_TOKEN }}
+  AUTHZ_TOKEN: ${{ secrets.AUTHZ_TOKEN }}
+  REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+  POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+  POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  SECRET_KEY_BASE: ${{ secrets.SECRET_KEY_BASE }}
+  TEST_KEY: im_only_testing
+  
   
 jobs:
   build:
@@ -12,6 +27,28 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      - name: Create local changes
+      - name: Save environment variables
         run: |
-          ls
+          echo "DOCKER_HUB_ACCESS_TOKEN=$DOCKER_HUB_ACCESS_TOKEN
+          DOCKER_HUB_USERNAME=$DOCKER_HUB_USERNAME
+          VIRTUAL_HOST=$VIRTUAL_HOST
+          LETSENCRYPT_EMAIL=$LETSENCRYPT_EMAIL
+          AUTHN_TOKEN=$AUTHN_TOKEN
+          AUTHZ_TOKEN=$AUTHZ_TOKEN
+          REDIS_PASSWORD=$REDIS_PASSWORD
+          POSTGRES_DB=$POSTGRES_DB
+          POSTGRES_USER=$POSTGRES_USER
+          POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+          SECRET_KEY_BASE=$SECRET_KEY_BASE" > .env
+      - name: Replace env variables on judge0.conf
+        run: |
+          sed -i -e 's/${AUTHZ_TOKEN}/$TEST_KEY/g' judge0.conf
+          cat judge0.conf
+        
+        
+      
+      
+      
+      
+      
+      
