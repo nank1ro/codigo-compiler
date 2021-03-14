@@ -4,14 +4,61 @@ name: CI to Docker Hub
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    env:
+      DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+      VIRTUAL_HOST: ${{ secrets.VIRTUAL_HOST }}
+      LETSENCRYPT_EMAIL: ${{ secrets.LETSENCRYPT_EMAIL }}
+      AUTHN_TOKEN: ${{ secrets.AUTHN_TOKEN }}
+      AUTHZ_TOKEN: ${{ secrets.AUTHZ_TOKEN }}
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      SECRET_KEY_BASE: ${{ secrets.SECRET_KEY_BASE }}
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      - name: Create local changes
+      - name: Save environment variables
         run: |
-          ls
+          echo "DOCKER_HUB_ACCESS_TOKEN=$DOCKER_HUB_ACCESS_TOKEN
+          DOCKER_HUB_USERNAME=$DOCKER_HUB_USERNAME
+          VIRTUAL_HOST=$VIRTUAL_HOST
+          LETSENCRYPT_EMAIL=$LETSENCRYPT_EMAIL
+          AUTHN_TOKEN=$AUTHN_TOKEN
+          AUTHZ_TOKEN=$AUTHZ_TOKEN
+          REDIS_PASSWORD=$REDIS_PASSWORD
+          POSTGRES_DB=$POSTGRES_DB
+          POSTGRES_USER=$POSTGRES_USER
+          POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+          SECRET_KEY_BASE=$SECRET_KEY_BASE" > .env
+      - name: Replace env variables on judge0.conf
+        run: |
+          sed -i -e 's/${AUTHZ_TOKEN}/'"$AUTHZ_TOKEN"'/g' judge0.conf
+          sed -i -e 's/${REDIS_PASSWORD}/'"$REDIS_PASSWORD"'/g' judge0.conf
+          sed -i -e 's/${POSTGRES_DB}/'"$POSTGRES_DB"'/g' judge0.conf
+          sed -i -e 's/${POSTGRES_USER}/'"$POSTGRES_USER"'/g' judge0.conf
+          sed -i -e 's/${POSTGRES_PASSWORD}/'"$POSTGRES_PASSWORD"'/g' judge0.conf
+          sed -i -e 's/${SECRET_KEY_BASE}/'"$SECRET_KEY_BASE"'/g' judge0.conf
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1.8.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1.1.1
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2.3.0
+        with:
+          context: ./
+          file: ./Dockerfile
+          push: true
+          tags: ushamandya/simplewhale:latest
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
